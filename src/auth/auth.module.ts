@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { UsersQuery } from '../common/USERS_DB/usersQuary';
 import { GenerateTokensService } from './services/jwt/services/genrateTokens';
 import { HandleDeviceService } from './services/device/handleDevice';
+import { TokensQuariesService } from './services/jwt/quaries/tokensQuaries';
 
 @Module({
   imports: [
@@ -14,6 +15,13 @@ import { HandleDeviceService } from './services/device/handleDevice';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, UsersQuery, GenerateTokensService, PasswordService, HandleDeviceService],
+  providers: [
+    AuthService,
+    UsersQuery,
+    GenerateTokensService,
+    PasswordService,
+    HandleDeviceService,
+    TokensQuariesService,
+  ],
 })
 export class AuthModule {}

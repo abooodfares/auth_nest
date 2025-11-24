@@ -78,11 +78,15 @@ export class AuthService {
         }
     }
     async resetPassword( resetPasswordDto: ResetPasswordDto) {
-        const { oldPassword, newPassword, deviceFingerprint } = resetPasswordDto;
+        const { oldPassword, newPassword, deviceFingerprint, useruuid } = resetPasswordDto;
+
+        if (!useruuid || !deviceFingerprint) {
+            throw new UnauthorizedException(AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS);
+        }
 
         try {
             // Get user with current password
-            const user = await this.usersQuery.findUserByPublicId(resetPasswordDto.useruuid);
+            const user = await this.usersQuery.findUserByPublicId(useruuid);
 
             if (!user) {
                 throw new UnauthorizedException(AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS);
@@ -137,6 +141,10 @@ export class AuthService {
     }
 
     async logout(logoutDto: LogoutDto) {
+        if (!logoutDto.useruuid || !logoutDto.deviceFingerprint) {
+            throw new UnauthorizedException(AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS);
+        }
+
         try {
             // Revoke the refresh token
             await this.tokensQuariesService.revokeRefreshToken(logoutDto);

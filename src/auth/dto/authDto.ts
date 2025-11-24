@@ -93,10 +93,6 @@ export class RefreshTokenDto {
 
 export class ResetPasswordDto {
   @IsString()
-  @IsNotEmpty({ message: 'User UUID is required' })
-  useruuid: string;
-
-  @IsString()
   @IsNotEmpty({ message: 'Old password is required' })
   oldPassword: string;
 
@@ -109,19 +105,15 @@ export class ResetPasswordDto {
   })
   newPassword: string;
 
-  @IsString()
-  @IsNotEmpty({ message: 'Device fingerprint is required' })
-  deviceFingerprint: string;
+  // These fields will be populated from JWT token in the controller
+  useruuid?: string;
+  deviceFingerprint?: string;
 }
 
 export class LogoutDto {
-  @IsString()
-  @IsNotEmpty({ message: 'User UUID is required' })
-  useruuid: string;
-
-  @IsString()
-  @IsNotEmpty({ message: 'Device fingerprint is required' })
-  deviceFingerprint: string;
+  // These fields will be populated from JWT token in the controller
+  useruuid?: string;
+  deviceFingerprint?: string;
 }
 
 export class RefreshTokenRequestDto {

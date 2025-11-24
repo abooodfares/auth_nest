@@ -1,9 +1,17 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserLoginDto, UserRegisterDto, LogoutDto, RefreshTokenRequestDto } from './dto/authDto';
+import {
+  UserLoginDto,
+  UserRegisterDto,
+  LogoutDto,
+  RefreshTokenRequestDto,
+  ResetPasswordDto,
+} from './dto/authDto';
 import { ApiResponse } from '../common/interfaces/api-response.interface';
 import { AUTH_SUCCESS_MESSAGES } from './constants/successMessages';
 import { AUTH_CONTROLLER_NAMES } from './constants/controllerNames';
+import { AuthGuard } from './services/jwt/guards/jwtGuard';
+import { User } from './decorators/user.decorator';
 
 @Controller(AUTH_CONTROLLER_NAMES.AUTH)
 export class AuthController {
@@ -35,8 +43,17 @@ export class AuthController {
 
   @Post(AUTH_CONTROLLER_NAMES.LOGOUT)
   @HttpCode(HttpStatus.OK)
-  async logout(@Body() logoutDto: LogoutDto): Promise<ApiResponse> {
-    const data = await this.authService.logout(logoutDto);
+  @UseGuards(AuthGuard)
+  async logout(
+    @Body() logoutDto: LogoutDto,
+    @User('useruuid') useruuid: string,
+    @User('deviceFingerprint') deviceFingerprint: string,
+  ): Promise<ApiResponse> {
+    const data = await this.authService.logout({
+      ...logoutDto,
+      useruuid,
+      deviceFingerprint,
+    });
     return {
       success: true,
       statusCode: HttpStatus.OK,
@@ -55,6 +72,27 @@ export class AuthController {
       success: true,
       statusCode: HttpStatus.OK,
       message: AUTH_SUCCESS_MESSAGES.REFRESH_TOKEN,
+      data,
+    };
+  }
+
+  @Post(AUTH_CONTROLLER_NAMES.RESET_PASSWORD)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+    @User('useruuid') useruuid: string,
+    @User('deviceFingerprint') deviceFingerprint: string,
+  ): Promise<ApiResponse> {
+    const data = await this.authService.resetPassword({
+      ...resetPasswordDto,
+      useruuid,
+      deviceFingerprint,
+    });
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      message: AUTH_SUCCESS_MESSAGES.PASSWORD_RESET,
       data,
     };
   }
