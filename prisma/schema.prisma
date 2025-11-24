@@ -1,0 +1,341 @@
+// ===============================
+// Prisma Schema with Dual ID Pattern
+// UUID for all entities except UserDevice (uses fingerprint)
+// ===============================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ===============================
+// Enums
+// ===============================
+
+enum OtpStatus {
+  PENDING
+  VERIFIED
+  BLOCKED
+  EXPIRED
+}
+
+enum RoleKey {
+  ADMIN
+  FAMILY_ADMIN
+  USER
+}
+
+enum PermissionKey {
+  MANAGE_ROLES
+  EDIT_NODE
+  EDIT_RELATIONS
+  SEND_INVITE
+  VIEW_FAMILY_MEMBERS
+  GET_ALL_USERS_PG
+  GET_ALL_USERS_NEO4J
+  SEARCH_PG
+  SEARCH_NEO4J
+}
+
+// ===============================
+// User & Auth Models
+// ===============================
+
+model Users {
+  internalId      Int       @id @default(autoincrement()) @map("internal_id")
+  nationalId      String?   @unique @db.VarChar(255)
+  publicId        String    @unique @default(uuid()) @map("public_id")
+  familyId        Int?      @map("family_id")
+  phone           String?   @unique @db.VarChar(20)
+  email           String    @unique @db.VarChar(50)
+  password        String    @db.VarChar(255)
+  birthOfDate     String    @map("birth_of_date") @db.VarChar(10)
+  emailVerified   Boolean   @default(false) @map("email_verified")
+  phoneVerified   Boolean   @default(false) @map("phone_verified")
+  name            String    @db.VarChar(50)
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamp()
+  phoneVerifiedAt DateTime? @map("phone_verified_at") @db.Timestamp()
+  isBlocked       Boolean   @default(false) @map("isblocked")
+  blockedAt       DateTime? @map("blocked_at") @db.Timestamp()
+  blockedUntil    DateTime? @map("blocked_until") @db.Timestamp()
+  blockCount      Int       @default(0) @map("block_count")
+  foreverBlock    Boolean   @default(false) @map("Forever_block")
+  createdAt       DateTime  @default(now()) @db.Timestamp()
+  updatedAt       DateTime  @updatedAt @db.Timestamp()
+
+  // Relations
+  userRoles         UsersRoles[]
+  userDeviceUserIds UsersDevicesUserId[]
+  otpTokens         Otps[]
+  userAudits        UsersAudit[]
+  userRoleAudits    UsersRoleAudit[]
+  adminAudits       UsersRoleAudit[]     @relation("UserAdminAudits")
+  refreshTokens     RefreshTokens[]
+
+  // Family Tree Relations
+  familyTreeAdmins FamilyTreeAdmins[]      @relation("UserFamilyTreeAdmin")
+  familyTreeAccess FamilyTreeAccessUsers[] @relation("UserFamilyTreeAccess")
+  familyTree       FamilyTrees?            @relation("FamilyTreeMembers", fields: [familyId], references: [internalId], onDelete: SetNull)
+  invitesAsAdmin   UserInvites[]           @relation("InviteAdmin")
+
+  @@index([email], type: Hash)
+  @@index([phone], type: Hash)
+  @@index([familyId])
+  @@map("users")
+}
+
+// ===============================
+// Roles & Permissions
+// ===============================
+
+model Roles {
+  internalId Int     @id @default(autoincrement()) @map("internal_id")
+  roleKey    RoleKey @unique @map("rolekey")
+
+  // Relations
+  userRoles       UsersRoles[]
+  roleAudits      UsersRoleAudit[]
+  rolePermissions RolesPermissions[]
+
+  @@map("Roles")
+}
+
+model Permissions {
+  internalId  Int           @id @default(autoincrement()) @map("internal_id")
+  key         PermissionKey @unique
+  name        String        @db.VarChar(80)
+  description String?       @db.VarChar(255)
+
+  // Relations
+  rolePermissions RolesPermissions[]
+
+  @@map("Permissions")
+}
+
+model UsersRoles {
+  internalId Int @id @default(autoincrement()) @map("internal_id")
+  roleId     Int @map("roleid_fk")
+  userId     Int @map("userid_fk")
+
+  // Relations
+  role Roles @relation(fields: [roleId], references: [internalId], onDelete: Cascade)
+  user Users @relation(fields: [userId], references: [internalId], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("User_and_Roles")
+}
+
+model RolesPermissions {
+  internalId   Int @id @default(autoincrement()) @map("internal_id")
+  roleId       Int @map("roleid_fk")
+  permissionId Int @map("permissionid_fk")
+
+  // Relations
+  role       Roles       @relation(fields: [roleId], references: [internalId], onDelete: Cascade)
+  permission Permissions @relation(fields: [permissionId], references: [internalId], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("Role_and_Permissions")
+}
+
+// ===============================
+// Audits
+// ===============================
+
+model UsersAudit {
+  internalId        Int      @id @default(autoincrement()) @map("internal_id")
+  phone             String?  @db.VarChar(20)
+  email             String   @db.VarChar(255)
+  password          String   @db.VarChar(255)
+  isAbsher          Boolean  @map("is_absher")
+  birthOfDate       DateTime @map("birth_of_date") @db.Date
+  emailVerified     Boolean  @map("email_verified")
+  phoneVerified     Boolean  @map("phone_verified")
+  name              String   @db.VarChar(100)
+  userId            Int      @map("userid_fk")
+  changeAt          DateTime @map("change_at") @db.Timestamp()
+  actionType        String   @map("action_type") @db.VarChar(50)
+  changeCount       Int      @map("change_count")
+  periodEnd         String   @map("period_end") @db.VarChar(50)
+  deviceFingerprint String?  @map("device_fingerprint")
+
+  // Relations
+  user   Users         @relation(fields: [userId], references: [internalId], onDelete: Cascade)
+  device UsersDevices? @relation("AuditDevice", fields: [deviceFingerprint], references: [fingerprint], onDelete: SetNull)
+
+  @@index([email], type: Hash)
+  @@index([phone], type: Hash)
+  @@index([deviceFingerprint])
+  @@map("users_audit")
+}
+
+model UsersRoleAudit {
+  internalId  Int      @id @default(autoincrement()) @map("internal_id")
+  userAdminId Int?     @map("useradmin_id")
+  userId      Int      @map("userid_change_fk")
+  roleId      Int      @map("roleid_fk")
+  changeAt    DateTime @map("change_at") @db.Timestamp()
+  actionType  String   @map("action_type") @db.VarChar(50)
+
+  // Relations
+  role      Roles  @relation(fields: [roleId], references: [internalId], onDelete: Cascade)
+  user      Users  @relation(fields: [userId], references: [internalId], onDelete: Cascade)
+  userAdmin Users? @relation("UserAdminAudits", fields: [userAdminId], references: [internalId], onDelete: SetNull)
+
+  @@map("User_and_Roles_audit")
+}
+
+// ===============================
+// Devices, Tokens
+// ===============================
+
+model UsersDevices {
+  internalId   Int       @id @default(autoincrement()) @map("internal_id")
+  fingerprint  String    @unique @map("fingerprint")
+  createdAt    DateTime  @default(now()) @map("create_at") @db.Timestamp()
+  deviceName   String    @map("device_name") @db.VarChar(100)
+  isBlocked    Boolean   @default(false) @map("isblocked")
+  blockedAt    DateTime? @map("blocked_at") @db.Timestamp()
+  blockedUntil DateTime? @map("blocked_until") @db.Timestamp()
+  blockCount   Int       @default(0) @map("block_count")
+  foreverBlock Boolean   @default(false) @map("forever_block")
+
+  // Relations
+  userDeviceUserIds UsersDevicesUserId[]
+  otpTokens         Otps[]
+  refreshTokens     RefreshTokens[]      @relation("DeviceRefreshTokens")
+  userAudits        UsersAudit[]         @relation("AuditDevice")
+
+  @@index([fingerprint], type: Hash)
+  @@map("User_device")
+}
+
+model Otps {
+  internalId Int       @id @default(autoincrement()) @map("internal_id")
+  email      String?   @db.VarChar(50)
+  phone      String?   @db.VarChar(20)
+  userId     Int?      @map("userid_fk")
+  deviceId   Int?      @map("deviceid_fk")
+  publicId   String    @unique @default(uuid()) @map("public_id")
+  otpCode    String    @map("otp_code") @db.VarChar(6)
+  action     String    @map("action") @db.VarChar(50)
+  status     OtpStatus @default(PENDING)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamp()
+  isUsed     Boolean   @default(false) @map("is_used")
+  usedAt     DateTime? @map("used_at") @db.Timestamp()
+  blockedAt  DateTime? @map("blocked_at") @db.Timestamp()
+  verifiedAt DateTime? @map("verified_at") @db.Timestamp()
+  createdAt  DateTime  @default(now())
+
+  user   Users?        @relation(fields: [userId], references: [internalId])
+  device UsersDevices? @relation(fields: [deviceId], references: [internalId])
+
+  @@index([userId])
+  @@index([email], type: Hash)
+  @@index([phone], type: Hash)
+  @@index([publicId], type: Hash)
+  @@map("Otp_Tokens")
+}
+
+model RefreshTokens {
+  internalId        Int       @id @default(autoincrement()) @map("internal_id")
+  deviceFingerprint String    @map("device_fingerprint")
+  userId            Int
+  tokenHash         String
+  isRevoked         Boolean   @default(false)
+  revokedAt         DateTime? @map("revoked_at") @db.Timestamp()
+  expiresAt         DateTime
+  createdAt         DateTime  @default(now())
+
+  user   Users        @relation(fields: [userId], references: [internalId])
+  device UsersDevices @relation("DeviceRefreshTokens", fields: [deviceFingerprint], references: [fingerprint])
+
+  @@unique([deviceFingerprint, userId])
+  @@index([userId])
+}
+
+model UsersDevicesUserId {
+  internalId Int @id @default(autoincrement()) @map("internal_id")
+  deviceId   Int @map("deviceid_fk")
+  userId     Int @map("userid_fk")
+
+  // Relations
+  device UsersDevices @relation(fields: [deviceId], references: [internalId], onDelete: Cascade)
+  user   Users        @relation(fields: [userId], references: [internalId], onDelete: Cascade)
+
+  @@unique([deviceId, userId])
+  @@map("User_Device_UserId")
+}
+
+// ===============================
+// Family Tree Management
+// ===============================
+
+model FamilyTrees {
+  internalId  Int      @id @default(autoincrement()) @map("internal_id")
+  publicId    String   @unique @default(uuid()) @map("public_id")
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp()
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp()
+
+  // Relations
+  members      Users[]                 @relation("FamilyTreeMembers")
+  admins       FamilyTreeAdmins[]
+  accessGrants FamilyTreeAccessUsers[]
+  invites      UserInvites[]
+
+  @@map("family_trees")
+}
+
+model FamilyTreeAdmins {
+  internalId   Int      @id @default(autoincrement()) @map("internal_id")
+  userId       Int      @map("user_id")
+  familyTreeId Int      @map("family_tree_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user       Users       @relation("UserFamilyTreeAdmin", fields: [userId], references: [internalId], onDelete: Cascade)
+  familyTree FamilyTrees @relation(fields: [familyTreeId], references: [internalId], onDelete: Cascade)
+
+  @@unique([userId, familyTreeId])
+  @@index([userId])
+  @@index([familyTreeId])
+  @@map("family_tree_admins")
+}
+
+model FamilyTreeAccessUsers {
+  internalId   Int      @id @default(autoincrement()) @map("internal_id")
+  userId       Int      @map("user_id")
+  familyTreeId Int      @map("family_tree_id")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp()
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp()
+
+  // Relations
+  user       Users       @relation("UserFamilyTreeAccess", fields: [userId], references: [internalId], onDelete: Cascade)
+  familyTree FamilyTrees @relation(fields: [familyTreeId], references: [internalId], onDelete: Cascade)
+
+  @@unique([userId, familyTreeId])
+  @@index([familyTreeId])
+  @@map("family_tree_access")
+}
+
+model UserInvites {
+  internalId     String   @id @default(uuid()) @map("internal_id") @db.Uuid
+  familyId       Int      @map("family_id")
+  adminId        Int      @map("admin_id")
+  email          String?  @db.VarChar(50)
+  phone          String?  @db.VarChar(20)
+  acceptInvite   Boolean? @map("accept_invite")
+  isFamilyMember Boolean  @default(false) @map("is_family_member")
+  createdAt      DateTime @default(now()) @db.Timestamp()
+  updatedAt      DateTime @updatedAt @db.Timestamp()
+
+  // Relations
+  family FamilyTrees @relation(fields: [familyId], references: [internalId], onDelete: Cascade)
+  admin  Users       @relation("InviteAdmin", fields: [adminId], references: [internalId], onDelete: Cascade)
+}
