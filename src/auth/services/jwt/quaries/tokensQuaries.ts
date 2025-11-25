@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../../../../prisma/prisma.service';
-import { RefreshTokenDto, LogoutDto, RefreshTokenRequestDto } from '../../../dto/authDto';
+import { RefreshTokenDto, LogoutDto, RefreshTokenRequestDto } from '../../../dto/auth_dto';
 import { UsersQuery } from '../../../../common/USERS_DB/usersQuary';
 import { AUTH_ERROR_MESSAGES } from 'src/auth/constants/errorMessages';
 import * as bcrypt from 'bcrypt';
@@ -57,7 +57,7 @@ export class TokensQuariesService {
     async revokeRefreshToken(logoutDto: LogoutDto) {
         // Find user by UUID (publicId)
         const user = await this.usersQuery.findUserByPublicId(
-            logoutDto.useruuid,
+            logoutDto.useruuid!,
         );
 
         if (!user) {

@@ -6,7 +6,7 @@ import {
   LogoutDto,
   RefreshTokenRequestDto,
   ResetPasswordDto,
-} from './dto/authDto';
+} from './dto/auth_dto';
 import { ApiResponse } from '../common/interfaces/api-response.interface';
 import { AUTH_SUCCESS_MESSAGES } from './constants/successMessages';
 import { AUTH_CONTROLLER_NAMES } from './constants/controllerNames';

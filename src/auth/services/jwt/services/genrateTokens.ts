@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AccessTokenDto, RefreshTokenDto } from '../../../dto/authDto';
+import { AccessTokenDto, RefreshTokenDto } from '../../../dto/auth_dto';
 import { TokensQuariesService } from '../quaries/tokensQuaries';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';

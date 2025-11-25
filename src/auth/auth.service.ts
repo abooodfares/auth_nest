@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
-import { UserLoginDto, UserRegisterDto, ResetPasswordDto, LogoutDto, RefreshTokenRequestDto } from './dto/authDto';
+import { UserLoginDto, UserRegisterDto, ResetPasswordDto, LogoutDto, RefreshTokenRequestDto } from './dto/auth_dto';
 import { PasswordService } from './services/password/password.service';
 import { AUTH_ERROR_MESSAGES } from './constants/errorMessages';
 import { AUTH_SUCCESS_MESSAGES } from './constants/successMessages';
@@ -175,9 +175,7 @@ export class AuthService {
                 access_token: accessToken,
             };
         } catch (error) {
-            if (error instanceof UnauthorizedException) {
-                throw error;
-            }
+            
             throw new UnauthorizedException(AUTH_ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
         }
     }

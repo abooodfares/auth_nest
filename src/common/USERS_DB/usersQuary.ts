@@ -1,6 +1,6 @@
 import { PrismaService } from '../../prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { UserLoginDto, UserRegisterDto } from '../../auth/dto/authDto';
+import { UserLoginDto, UserRegisterDto } from '../../auth/dto/auth_dto';
 import { Prisma } from '@prisma/client';
 
 export type CreateUserData = Omit<UserRegisterDto, 'fingerprint' | 'deviceName'>;
