@@ -193,8 +193,7 @@ model UsersRoleAudit {
 // ===============================
 
 model UsersDevices {
-  internalId   Int       @id @default(autoincrement()) @map("internal_id")
-  fingerprint  String    @unique @map("fingerprint")
+  fingerprint  String    @id @map("fingerprint")
   createdAt    DateTime  @default(now()) @map("create_at") @db.Timestamp()
   deviceName   String    @map("device_name") @db.VarChar(100)
   isBlocked    Boolean   @default(false) @map("isblocked")
@@ -209,34 +208,32 @@ model UsersDevices {
   refreshTokens     RefreshTokens[]      @relation("DeviceRefreshTokens")
   userAudits        UsersAudit[]         @relation("AuditDevice")
 
-  @@index([fingerprint], type: Hash)
   @@map("User_device")
 }
 
 model Otps {
-  internalId Int       @id @default(autoincrement()) @map("internal_id")
-  email      String?   @db.VarChar(50)
-  phone      String?   @db.VarChar(20)
-  userId     Int?      @map("userid_fk")
-  deviceId   Int?      @map("deviceid_fk")
-  publicId   String    @unique @default(uuid()) @map("public_id")
+  internalId        Int       @id @default(autoincrement()) @map("internal_id")
+  email             String?   @db.VarChar(50)
+  phone             String?   @db.VarChar(20)
+  userId            Int?      @map("userid_fk")
+  deviceFingerprint String?   @map("devicefingerprint")
+
   otpCode    String    @map("otp_code") @db.VarChar(6)
   action     String    @map("action") @db.VarChar(50)
   status     OtpStatus @default(PENDING)
   expiresAt  DateTime  @map("expires_at") @db.Timestamp()
-  isUsed     Boolean   @default(false) @map("is_used")
-  usedAt     DateTime? @map("used_at") @db.Timestamp()
+  attempts   Int       @default(0)
+
   blockedAt  DateTime? @map("blocked_at") @db.Timestamp()
   verifiedAt DateTime? @map("verified_at") @db.Timestamp()
   createdAt  DateTime  @default(now())
 
   user   Users?        @relation(fields: [userId], references: [internalId])
-  device UsersDevices? @relation(fields: [deviceId], references: [internalId])
+  device UsersDevices? @relation(fields: [deviceFingerprint], references: [fingerprint])
 
   @@index([userId])
   @@index([email], type: Hash)
   @@index([phone], type: Hash)
-  @@index([publicId], type: Hash)
   @@map("Otp_Tokens")
 }
 
@@ -258,15 +255,15 @@ model RefreshTokens {
 }
 
 model UsersDevicesUserId {
-  internalId Int @id @default(autoincrement()) @map("internal_id")
-  deviceId   Int @map("deviceid_fk")
-  userId     Int @map("userid_fk")
+  internalId        Int    @id @default(autoincrement()) @map("internal_id")
+  deviceFingerprint String @map("deviceid_fk")
+  userId            Int    @map("userid_fk")
 
   // Relations
-  device UsersDevices @relation(fields: [deviceId], references: [internalId], onDelete: Cascade)
+  device UsersDevices @relation(fields: [deviceFingerprint], references: [fingerprint], onDelete: Cascade)
   user   Users        @relation(fields: [userId], references: [internalId], onDelete: Cascade)
 
-  @@unique([deviceId, userId])
+  @@unique([deviceFingerprint, userId])
   @@map("User_Device_UserId")
 }
 
