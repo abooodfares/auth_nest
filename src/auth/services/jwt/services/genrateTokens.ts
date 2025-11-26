@@ -24,7 +24,7 @@ export class GenerateTokensService {
         const refreshToken = randomBytes(64).toString('hex');
 
         // Hash the token for storage using bcrypt
-        const tokenHash = await bcrypt.hash(refreshToken, 10);
+        const tokenHash = await bcrypt.hash(refreshToken, parseInt(process.env.BCRYPT_SALT_ROUNDS!));
 
         // Calculate expiration date (2 weeks from now)
         const expiresAt = new Date();

@@ -7,7 +7,7 @@ import { AUTH_NUMERIC_CONSTANTS } from './constants/numericConstants';
 import { AUTH_ACTION_TYPES } from './constants/actionTypes';
 import { UsersQuery } from '../common/USERS_DB/usersQuary';
 import { GenerateTokensService } from './services/jwt/services/genrateTokens';
-import { HandleDeviceService } from './services/device/handleDevice';
+import { HandleDeviceService } from './services/device/handleDeviceCreation';
 import { TokensQuariesService } from './services/jwt/quaries/tokensQuaries';
 import { Prisma } from '@prisma/client';
 

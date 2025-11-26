@@ -125,3 +125,54 @@ export class RefreshTokenRequestDto {
   @IsNotEmpty({ message: 'Device fingerprint is required' })
   deviceFingerprint: string;
 }
+
+export class SendOtpEmailDto {
+  @IsEmail({}, { message: 'Invalid email format' })
+  @IsNotEmpty({ message: 'Email is required' })
+  email: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Action is required' })
+  action: string;
+
+  @IsString()
+  deviceFingerprint?: string;
+}
+
+export class SendOtpPhoneDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Phone number is required' })
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Invalid phone number format',
+  })
+  phone: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Action is required' })
+  action: string;
+
+  @IsString()
+  deviceFingerprint?: string;
+}
+
+export class CreateOtpDto {
+  @IsEmail({}, { message: 'Invalid email format' })
+  email?: string;
+
+  @IsString()
+  phone?: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'OTP code is required' })
+  otpCode: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Action is required' })
+  action: string;
+
+  @IsNotEmpty({ message: 'Expiration date is required' })
+  expiresAt: Date;
+
+  @IsString()
+  deviceFingerprint?: string;
+}

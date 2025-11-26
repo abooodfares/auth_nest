@@ -21,39 +21,6 @@ export class UsersQuery {
         });
     }
 
-    async findDeviceByFingerprint(fingerprint: string) {
-        return await this.prisma.usersDevices.findUnique({
-            where: { fingerprint },
-        });
-    }
-
-    async createDevice(fingerprint: string, deviceName: string) {
-        return await this.prisma.usersDevices.create({
-            data: {
-                fingerprint,
-                deviceName,
-            },
-        });
-    }
-
-    async linkUserToDevice(userId: number, deviceId: number) {
-        return await this.prisma.usersDevicesUserId.create({
-            data: {
-                userId,
-                deviceId,
-            },
-        });
-    }
-
-    async findUserDeviceLink(userId: number, deviceId: number) {
-        return await this.prisma.usersDevicesUserId.findFirst({
-            where: {
-                userId,
-                deviceId,
-            },
-        });
-    }
-
     async findUserByPublicId(publicId: string) {
         return await this.prisma.users.findUnique({
             where: { publicId },
@@ -87,6 +54,50 @@ export class UsersQuery {
 
             // Create audit record with device fingerprint relation
             await tx.usersAudit.create({ data: auditData });
+        });
+    }
+
+    async findUserByEmail(email: string) {
+        return await this.prisma.users.findUnique({
+            where: { email },
+        });
+    }
+
+    async findUserByPhone(phone: string) {
+        return await this.prisma.users.findUnique({
+            where: { phone },
+        });
+    }
+
+    async clearTimeBasedBlock(userId: number) {
+        return await this.prisma.users.update({
+            where: { internalId: userId },
+            data: {
+                blockedUntil: null,
+                isBlocked: false,
+            },
+        });
+    }
+
+    async blockUser(userId: number, blockedAt: Date, blockedUntil: Date) {
+        return await this.prisma.users.update({
+            where: { internalId: userId },
+            data: {
+                isBlocked: true,
+                blockedAt,
+                blockedUntil,
+                blockCount: { increment: 1 },
+            },
+        });
+    }
+
+    async applyPermanentBlock(userId: number) {
+        return await this.prisma.users.update({
+            where: { internalId: userId },
+            data: {
+                foreverBlock: true,
+                isBlocked: true,
+            },
         });
     }
 }

@@ -11,4 +11,10 @@ export const AUTH_ERROR_MESSAGES = {
   TOKEN_EXPIRED: 'Refresh token has expired',
   DEVICE_MISMATCH: 'Device fingerprint does not match',
   TOKEN_REVOKED: 'Refresh token has been revoked',
+  ACCESS_DENIED_PERMANENTLY_BLOCKED: 'Access denied: permanently blocked',
+  ACCESS_DENIED_BLOCKED_UNTIL: 'Access denied: blocked until',
+  ACCESS_DENIED_TEMP_BLOCKED: 'Access denied: temporarily blocked',
+  FAILED_TO_SEND_OTP_EMAIL: 'Failed to send OTP email',
+  OTP_ALREADY_EXISTS: 'An active OTP already exists for this email, phone, or device. Please wait before requesting a new one.',
+  OTP_RATE_LIMIT_EXCEEDED: 'Too many OTP requests. You have been temporarily blocked for 1 hour.',
 } as const;

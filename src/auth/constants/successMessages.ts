@@ -4,4 +4,5 @@ export const AUTH_SUCCESS_MESSAGES = {
   PASSWORD_RESET: 'Password reset successfully',
   LOGOUT: 'Logout successful',
   REFRESH_TOKEN: 'Token refreshed successfully',
+  OTP_SENT: 'Message sent successfully',
 } as const;

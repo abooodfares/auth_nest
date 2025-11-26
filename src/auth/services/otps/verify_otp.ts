@@ -1,0 +1,4 @@
+/* check is blocked forever or time block for devise and user 
+i already have metod
+
+*/
