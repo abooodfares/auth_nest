@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { timingSafeEqual } from 'crypto';
 import { CheckBlocksService } from './blocks/checkBlocks';
 import { OtpsQueries } from './queries/otpsQueries';
 import { ApplyTimeBlockService } from './blocks/applyTimeBlock';
@@ -65,8 +66,15 @@ export class VerifyOtpService {
       throw new BadRequestException(AUTH_ERROR_MESSAGES.OTP_MAX_ATTEMPTS_REACHED);
     }
 
-    // Step 5: Validate OTP code
-    if (otp.otp_code !== otpCode) {
+    // Step 5: Validate OTP code using constant-time comparison
+    const otpBuffer = Buffer.from(otp.otp_code, 'utf8');
+    const inputBuffer = Buffer.from(otpCode, 'utf8');
+    
+    // Ensure buffers are same length for timingSafeEqual
+    const isValidOtp = otpBuffer.length === inputBuffer.length && 
+                       timingSafeEqual(otpBuffer, inputBuffer);
+    
+    if (!isValidOtp) {
       // Increment attempts
       await this.otpsQueries.incrementOtpAttempts(otp.internal_id);
       

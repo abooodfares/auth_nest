@@ -3,13 +3,20 @@ import { Injectable } from '@nestjs/common';
 import { UserLoginDto, UserRegisterDto } from '../../auth/dto/auth_dto';
 import { Prisma } from '@prisma/client';
 
-export type CreateUserData = Omit<UserRegisterDto, 'fingerprint' | 'deviceName'>;
+export type CreateUserData = {
+    email: string;
+    password: string;
+    name: string;
+    phone: string;
+    birthOfDate: string;
+    publicId: string;
+};
 
 @Injectable()
 export class UsersQuery {
     constructor(private prisma: PrismaService) {}
 
-    async createUser(data: CreateUserData & { publicId: string }) {
+    async createUser(data: CreateUserData) {
         return await this.prisma.users.create({
             data: {
                 email: data.email,

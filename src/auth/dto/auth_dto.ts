@@ -14,6 +14,27 @@ export class UserRegisterDto {
   email: string;
 
   @IsString()
+  @IsNotEmpty({ message: 'Device fingerprint is required' })
+  fingerprint: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Device name is required' })
+  @MaxLength(100, { message: 'Device name must not exceed 100 characters' })
+  deviceName: string;
+}
+
+export class VerifyOtpRegisterDto {
+  @IsEmail({}, { message: 'Invalid email format' })
+  @IsNotEmpty({ message: 'Email is required' })
+  email: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'OTP code is required' })
+  @MinLength(6, { message: 'OTP code must be 6 digits' })
+  @MaxLength(6, { message: 'OTP code must be 6 digits' })
+  otpCode: string;
+
+  @IsString()
   @IsNotEmpty({ message: 'Password is required' })
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
@@ -52,6 +73,26 @@ export class UserLoginDto {
   @IsEmail({}, { message: 'Invalid email format' })
   @IsNotEmpty({ message: 'Email is required' })
   email: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Device fingerprint is required' })
+  fingerprint: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Device name is required' })
+  deviceName: string;
+}
+
+export class VerifyOtpLoginDto {
+  @IsEmail({}, { message: 'Invalid email format' })
+  @IsNotEmpty({ message: 'Email is required' })
+  email: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'OTP code is required' })
+  @MinLength(6, { message: 'OTP code must be 6 digits' })
+  @MaxLength(6, { message: 'OTP code must be 6 digits' })
+  otpCode: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Password is required' })
@@ -192,6 +233,51 @@ export class VerifyOtpDto {
   @MinLength(6, { message: 'OTP code must be 6 digits' })
   @MaxLength(6, { message: 'OTP code must be 6 digits' })
   otpCode: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Device fingerprint is required' })
+  deviceFingerprint: string;
+}
+
+export class ForgotPasswordRequestDto {
+  @IsEmail({}, { message: 'Invalid email format' })
+  email?: string;
+
+  @IsString()
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Invalid phone number format',
+  })
+  phone?: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Device fingerprint is required' })
+  deviceFingerprint: string;
+}
+
+export class ForgotPasswordResetDto {
+  @IsEmail({}, { message: 'Invalid email format' })
+  email?: string;
+
+  @IsString()
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Invalid phone number format',
+  })
+  phone?: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'OTP code is required' })
+  @MinLength(6, { message: 'OTP code must be 6 digits' })
+  @MaxLength(6, { message: 'OTP code must be 6 digits' })
+  otpCode: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'New password is required' })
+  @MinLength(8, { message: 'New password must be at least 8 characters long' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
+    message:
+      'New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+  })
+  newPassword: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Device fingerprint is required' })

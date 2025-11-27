@@ -21,4 +21,7 @@ export const AUTH_ERROR_MESSAGES = {
   OTP_EXPIRED: 'OTP has expired. Please request a new OTP.',
   OTP_INCORRECT: 'Incorrect OTP code.',
   OTP_MAX_ATTEMPTS_REACHED: 'Maximum OTP verification attempts reached. Device and user have been blocked.',
+  USER_NOT_FOUND: 'User not found',
+  FORGOT_PASSWORD_FAILED: 'Failed to reset password',
+  CHANGE_LIMIT_REACHED: 'Password change limit reached. Please wait until the period ends.',
 } as const;

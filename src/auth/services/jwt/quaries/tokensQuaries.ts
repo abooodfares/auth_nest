@@ -25,8 +25,8 @@ export class TokensQuariesService {
         // Check if a token already exists for this userId and deviceFingerprint
         const existingToken = await this.prisma.refreshTokens.findFirst({
             where: {
-                deviceFingerprint: refreshTokenDto.deviceFingerprint,
-                userId: user.internalId,
+                device_fingerprint: refreshTokenDto.deviceFingerprint,
+                userId: user.internal_id,
             },
         });
 
@@ -34,11 +34,11 @@ export class TokensQuariesService {
         if (existingToken) {
             await this.prisma.refreshTokens.update({
                 where: {
-                    internalId: existingToken.internalId,
+                    internal_id: existingToken.internal_id,
                 },
                 data: {
                     isRevoked: true,
-                    revokedAt: new Date(),
+                    revoked_at: new Date(),
                 },
             });
         }
@@ -46,8 +46,8 @@ export class TokensQuariesService {
         // Create new token
         return await this.prisma.refreshTokens.create({
             data: {
-                userId: user.internalId,
-                deviceFingerprint: refreshTokenDto.deviceFingerprint,
+                userId: user.internal_id,
+                device_fingerprint: refreshTokenDto.deviceFingerprint,
                 tokenHash: refreshTokenDto.tokenHash,
                 expiresAt: refreshTokenDto.expiresAt,
             },
@@ -67,8 +67,8 @@ export class TokensQuariesService {
         // Find the refresh token for this user and device
         const refreshToken = await this.prisma.refreshTokens.findFirst({
             where: {
-                userId: user.internalId,
-                deviceFingerprint: logoutDto.deviceFingerprint,
+                userId: user.internal_id,
+                device_fingerprint: logoutDto.deviceFingerprint,
                 isRevoked: false,
             },
         });
@@ -80,11 +80,11 @@ export class TokensQuariesService {
         // Revoke the token
         return await this.prisma.refreshTokens.update({
             where: {
-                internalId: refreshToken.internalId,
+                internal_id: refreshToken.internal_id,
             },
             data: {
                 isRevoked: true,
-                revokedAt: new Date(),
+                revoked_at: new Date(),
             },
         });
     }
@@ -95,11 +95,11 @@ export class TokensQuariesService {
         // Find all non-revoked tokens for this device
         const storedTokens = await this.prisma.refreshTokens.findMany({
             where: {
-                deviceFingerprint: refreshTokenRequestDto. deviceFingerprint,
+                device_fingerprint: refreshTokenRequestDto. deviceFingerprint,
                 isRevoked: false,
             },
             include: {
-                user: true,
+                users: true,
             },
         });
 
@@ -127,7 +127,7 @@ export class TokensQuariesService {
         }
 
         // Check if device fingerprint matches
-        if (matchedToken.deviceFingerprint !== refreshTokenRequestDto. deviceFingerprint) {
+        if (matchedToken.device_fingerprint !== refreshTokenRequestDto. deviceFingerprint) {
             throw new UnauthorizedException(AUTH_ERROR_MESSAGES.DEVICE_MISMATCH);
         }
 
