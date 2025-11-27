@@ -9,9 +9,17 @@ export type CreateUserData = Omit<UserRegisterDto, 'fingerprint' | 'deviceName'>
 export class UsersQuery {
     constructor(private prisma: PrismaService) {}
 
-    async createUser(data: CreateUserData) {
+    async createUser(data: CreateUserData & { publicId: string }) {
         return await this.prisma.users.create({
-            data,
+            data: {
+                email: data.email,
+                password: data.password,
+                name: data.name,
+                phone: data.phone,
+                public_id: data.publicId,
+                birth_of_date: data.birthOfDate,
+                updatedAt: new Date(),
+            },
         });
     }
 
@@ -23,37 +31,37 @@ export class UsersQuery {
 
     async findUserByPublicId(publicId: string) {
         return await this.prisma.users.findUnique({
-            where: { publicId },
+            where: { public_id: publicId },
         });
     }
 
     async findUserByInternalId(internalId: number) {
         return await this.prisma.users.findUnique({
-            where: { internalId },
+            where: { internal_id: internalId },
         });
     }
 
     async getLastAuditByUserId(userId: number) {
-        return await this.prisma.usersAudit.findFirst({
-            where: { userId },
-            orderBy: { changeCount: 'desc' },
+        return await this.prisma.users_audit.findFirst({
+            where: { userid_fk: userId },
+            orderBy: { change_count: 'desc' },
         });
     }
 
     async updatePasswordWithAudit(
         userId: number,
         hashedNewPassword: string,
-        auditData: Prisma.UsersAuditCreateInput
+        auditData: Prisma.users_auditCreateInput
     ) {
         return await this.prisma.$transaction(async (tx) => {
             // Update user password
             await tx.users.update({
-                where: { internalId: userId },
+                where: { internal_id: userId },
                 data: { password: hashedNewPassword },
             });
 
             // Create audit record with device fingerprint relation
-            await tx.usersAudit.create({ data: auditData });
+            await tx.users_audit.create({ data: auditData });
         });
     }
 
@@ -71,32 +79,32 @@ export class UsersQuery {
 
     async clearTimeBasedBlock(userId: number) {
         return await this.prisma.users.update({
-            where: { internalId: userId },
+            where: { internal_id: userId },
             data: {
-                blockedUntil: null,
-                isBlocked: false,
+                blocked_until: null,
+                isblocked: false,
             },
         });
     }
 
     async blockUser(userId: number, blockedAt: Date, blockedUntil: Date) {
         return await this.prisma.users.update({
-            where: { internalId: userId },
+            where: { internal_id: userId },
             data: {
-                isBlocked: true,
-                blockedAt,
-                blockedUntil,
-                blockCount: { increment: 1 },
+                isblocked: true,
+                blocked_at: blockedAt,
+                blocked_until: blockedUntil,
+                block_count: { increment: 1 },
             },
         });
     }
 
     async applyPermanentBlock(userId: number) {
         return await this.prisma.users.update({
-            where: { internalId: userId },
+            where: { internal_id: userId },
             data: {
-                foreverBlock: true,
-                isBlocked: true,
+                Forever_block: true,
+                isblocked: true,
             },
         });
     }

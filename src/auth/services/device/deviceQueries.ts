@@ -7,75 +7,75 @@ export class DeviceQueries {
     constructor(private prisma: PrismaService) {}
 
     async findDeviceByFingerprint(fingerprint: string) {
-        return await this.prisma.usersDevices.findUnique({
+        return await this.prisma.user_device.findUnique({
             where: { fingerprint },
         });
     }
 
     async createDevice(fingerprint: string, deviceName: string) {
-        return await this.prisma.usersDevices.create({
+        return await this.prisma.user_device.create({
             data: {
                 fingerprint,
-                deviceName,
+                device_name: deviceName,
             },
         });
     }
 
     async linkUserToDevice(userId: number, deviceFingerprint: string) {
-        return await this.prisma.usersDevicesUserId.create({
+        return await this.prisma.user_Device_UserId.create({
             data: {
-                user: { connect: { internalId: userId } },
-                device: { connect: { fingerprint: deviceFingerprint } },
+                users: { connect: { internal_id: userId } },
+                User_device: { connect: { fingerprint: deviceFingerprint } },
             },
         });
     }
 
     async findUserDeviceLink(userId: number, deviceFingerprint: string) {
-        return await this.prisma.usersDevicesUserId.findFirst({
+        return await this.prisma.user_Device_UserId.findFirst({
             where: {
-                userId: userId,
-                device: {
+                userid_fk: userId,
+                User_device: {
                     fingerprint: deviceFingerprint,
                 },
             },
         });
     }
 
-    async updateDevice(fingerprint: string, data: Prisma.UsersDevicesUpdateInput) {
-        return await this.prisma.usersDevices.update({
+    async updateDevice(fingerprint: string, data: Prisma.User_deviceUpdateInput) {
+        return await this.prisma.user_device.update({
             where: { fingerprint },
             data,
         });
     }
 
     async clearTimeBasedBlock(fingerprint: string) {
-        return await this.prisma.usersDevices.update({
+        return await this.prisma.user_device.update({
             where: { fingerprint },
             data: {
-                blockedUntil: null,
-                isBlocked: false,
+                blocked_until: null,
+                isblocked: false,
             },
         });
     }
 
     async blockDevice(fingerprint: string, blockedAt: Date, blockedUntil: Date) {
-        return await this.prisma.usersDevices.update({
+        return await this.prisma.user_device.update({
             where: { fingerprint },
             data: {
-                isBlocked: true,
-                blockedAt,
-                blockedUntil,
-                blockCount: { increment: 1 },
+                isblocked: true,
+                blocked_at: blockedAt,
+                blocked_until: blockedUntil,
+                block_count: { increment: 1 },
             },
         });
     }
 
     async applyPermanentBlock(fingerprint: string) {
-        return await this.prisma.usersDevices.update({
+        return await this.prisma.user_device.update({
             where: { fingerprint },
             data: {
-                foreverBlock: true,
-                isBlocked: true,
+                forever_block: true,
+                isblocked: true,
             },
         });
     }

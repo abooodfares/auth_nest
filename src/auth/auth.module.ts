@@ -13,6 +13,7 @@ import { OtpsQueries } from './services/otps/queries/otpsQueries';
 import { OtpCreationService } from './services/otps/services/otp_creations';
 import { CheckBlocksService } from './services/otps/blocks/checkBlocks';
 import { ApplyTimeBlockService } from './services/otps/blocks/applyTimeBlock';
+import { VerifyOtpService } from './services/otps/verify_otp';
 import { DeviceQueries } from './services/device/deviceQueries';
 import { AuthGuard } from './services/jwt/guards/jwtGuard';
 
@@ -36,6 +37,7 @@ import { AuthGuard } from './services/jwt/guards/jwtGuard';
     OtpCreationService,
     CheckBlocksService,
     ApplyTimeBlockService,
+    VerifyOtpService,
     DeviceQueries,
     AuthGuard,
   ],

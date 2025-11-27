@@ -36,7 +36,7 @@ export class ApplyTimeBlockService {
     }
   }
 
-  private async blockOtpRequests(
+  async blockOtpRequests(
     email?: string,
     phone?: string,
     deviceFingerprint?: string
@@ -59,12 +59,12 @@ export class ApplyTimeBlockService {
     if (email) {
       const user = await this.usersQuery.findUserByEmail(email);
       if (user) {
-        await this.usersQuery.blockUser(user.internalId, now, blockedUntil);
+        await this.usersQuery.blockUser(user.internal_id, now, blockedUntil);
       }
     } else if (phone) {
       const user = await this.usersQuery.findUserByPhone(phone);
       if (user) {
-        await this.usersQuery.blockUser(user.internalId, now, blockedUntil);
+        await this.usersQuery.blockUser(user.internal_id, now, blockedUntil);
       }
     }
   }

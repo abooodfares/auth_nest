@@ -176,3 +176,24 @@ export class CreateOtpDto {
   @IsString()
   deviceFingerprint?: string;
 }
+
+export class VerifyOtpDto {
+  @IsEmail({}, { message: 'Invalid email format' })
+  email?: string;
+
+  @IsString()
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Invalid phone number format',
+  })
+  phone?: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'OTP code is required' })
+  @MinLength(6, { message: 'OTP code must be 6 digits' })
+  @MaxLength(6, { message: 'OTP code must be 6 digits' })
+  otpCode: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Device fingerprint is required' })
+  deviceFingerprint: string;
+}

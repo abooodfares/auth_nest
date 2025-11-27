@@ -17,4 +17,8 @@ export const AUTH_ERROR_MESSAGES = {
   FAILED_TO_SEND_OTP_EMAIL: 'Failed to send OTP email',
   OTP_ALREADY_EXISTS: 'An active OTP already exists for this email, phone, or device. Please wait before requesting a new one.',
   OTP_RATE_LIMIT_EXCEEDED: 'Too many OTP requests. You have been temporarily blocked for 1 hour.',
+  OTP_NOT_FOUND: 'OTP not found. Please request a new OTP.',
+  OTP_EXPIRED: 'OTP has expired. Please request a new OTP.',
+  OTP_INCORRECT: 'Incorrect OTP code.',
+  OTP_MAX_ATTEMPTS_REACHED: 'Maximum OTP verification attempts reached. Device and user have been blocked.',
 } as const;

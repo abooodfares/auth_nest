@@ -5,4 +5,5 @@ export const AUTH_SUCCESS_MESSAGES = {
   LOGOUT: 'Logout successful',
   REFRESH_TOKEN: 'Token refreshed successfully',
   OTP_SENT: 'Message sent successfully',
+  OTP_VERIFIED: 'OTP verified successfully',
 } as const;

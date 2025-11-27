@@ -27,25 +27,25 @@ export class CheckBlocksService {
     }
 
     // 1. Block Forever - Check if permanently blocked
-    if (device.foreverBlock) {
+    if (device.forever_block) {
       throw new ForbiddenException(AUTH_ERROR_MESSAGES.ACCESS_DENIED_PERMANENTLY_BLOCKED);
     }
 
-    // Check if block count has reached 5, apply permanent block
-    if (device.blockCount >= 5 && !device.foreverBlock) {
+    // Check if block count has reached threshold, apply permanent block
+    if (device.block_count >= AUTH_NUMERIC_CONSTANTS.MAX_BLOCK_COUNT_FOR_PERMANENT_BLOCK && !device.forever_block) {
       await this.deviceQueries.applyPermanentBlock(deviceFingerprint);
       throw new ForbiddenException(AUTH_ERROR_MESSAGES.ACCESS_DENIED_PERMANENTLY_BLOCKED);
     }
     
 
     // 2. Block Until - Check if blocked until a specific time
-    if (device.blockedUntil) {
+    if (device.blocked_until) {
       const now = new Date();
-      if (now < device.blockedUntil) {
-        const remainingMs = device.blockedUntil.getTime() - now.getTime();
-        const remainingMinutes = Math.ceil(remainingMs / (1000 * 60));
+      if (now < device.blocked_until) {
+        const remainingMs = device.blocked_until.getTime() - now.getTime();
+        const remainingMinutes = Math.ceil(remainingMs / AUTH_NUMERIC_CONSTANTS.MILLISECONDS_PER_MINUTE);
         throw new ForbiddenException(
-          `${AUTH_ERROR_MESSAGES.ACCESS_DENIED_BLOCKED_UNTIL} ${device.blockedUntil.toISOString()}. Remaining time: ${remainingMinutes} minutes`
+          `${AUTH_ERROR_MESSAGES.ACCESS_DENIED_BLOCKED_UNTIL} ${device.blocked_until.toISOString()}. Remaining time: ${remainingMinutes} minutes`
         );
       } else {
         // Time has passed, clear the block
@@ -63,27 +63,27 @@ export class CheckBlocksService {
 
       if (user) {
         // Check user-level blocks
-        if (user.foreverBlock) {
+        if (user.Forever_block) {
           throw new ForbiddenException(AUTH_ERROR_MESSAGES.ACCESS_DENIED_PERMANENTLY_BLOCKED);
         }
 
-        // Check if block count has reached 5, apply permanent block
-        if (user.blockCount >= 5 && !user.foreverBlock) {
-          await this.usersQuery.applyPermanentBlock(user.internalId);
+        // Check if block count has reached threshold, apply permanent block
+        if (user.block_count >= AUTH_NUMERIC_CONSTANTS.MAX_BLOCK_COUNT_FOR_PERMANENT_BLOCK && !user.Forever_block) {
+          await this.usersQuery.applyPermanentBlock(user.internal_id);
           throw new ForbiddenException(AUTH_ERROR_MESSAGES.ACCESS_DENIED_PERMANENTLY_BLOCKED);
         }
 
-        if (user.blockedUntil) {
+        if (user.blocked_until) {
           const now = new Date();
-          if (now < user.blockedUntil) {
-            const remainingMs = user.blockedUntil.getTime() - now.getTime();
-            const remainingMinutes = Math.ceil(remainingMs / (1000 * 60));
+          if (now < user.blocked_until) {
+            const remainingMs = user.blocked_until.getTime() - now.getTime();
+            const remainingMinutes = Math.ceil(remainingMs / AUTH_NUMERIC_CONSTANTS.MILLISECONDS_PER_MINUTE);
             throw new ForbiddenException(
-              `${AUTH_ERROR_MESSAGES.ACCESS_DENIED_BLOCKED_UNTIL} ${user.blockedUntil.toISOString()}. Remaining time: ${remainingMinutes} minutes`
+              `${AUTH_ERROR_MESSAGES.ACCESS_DENIED_BLOCKED_UNTIL} ${user.blocked_until.toISOString()}. Remaining time: ${remainingMinutes} minutes`
             );
           } else {
             // Time has passed, clear the block
-            await this.usersQuery.clearTimeBasedBlock(user.internalId);
+            await this.usersQuery.clearTimeBasedBlock(user.internal_id);
           }
         }
       }

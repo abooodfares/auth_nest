@@ -1,19 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../prisma/prisma.service';
 import { CreateOtpDto } from '../../../dto/auth_dto';
+import { OtpStatus } from '../../../constants/otpStatus';
 
 @Injectable()
 export class OtpsQueries {
   constructor(private prisma: PrismaService) {}
 
   async createOtp(createOtpDto: CreateOtpDto) {
-    return await this.prisma.otps.create({
+    return await this.prisma.otp_Tokens.create({
       data: {
         email: createOtpDto.email,
-        otpCode: createOtpDto.otpCode,
+        otp_code: createOtpDto.otpCode,
         action: createOtpDto.action,
-        expiresAt: createOtpDto.expiresAt,
-        deviceFingerprint: createOtpDto.deviceFingerprint,
+        expires_at: createOtpDto.expiresAt,
+        devicefingerprint: createOtpDto.deviceFingerprint,
+        status: OtpStatus.PENDING,
       },
     });
   }
@@ -21,15 +23,15 @@ export class OtpsQueries {
   async findActiveOtp(email?: string, phone?: string, deviceFingerprint?: string) {
     const now = new Date();
     
-    return await this.prisma.otps.findFirst({
+    return await this.prisma.otp_Tokens.findFirst({
       where: {
         OR: [
           email ? { email } : {},
           phone ? { phone } : {},
           deviceFingerprint ? { deviceFingerprint } : {},
         ].filter(condition => Object.keys(condition).length > 0),
-        status: 'PENDING',
-        expiresAt: {
+        status: OtpStatus.PENDING,
+        expires_at: {
           gt: now,
         },
       },
@@ -47,7 +49,7 @@ export class OtpsQueries {
   ): Promise<number> {
     const timeThreshold = new Date(Date.now() - timeWindowMs);
     
-    return await this.prisma.otps.count({
+    return await this.prisma.otp_Tokens.count({
       where: {
         OR: [
           email ? { email } : {},
@@ -68,18 +70,18 @@ export class OtpsQueries {
   ) {
     const now = new Date();
     
-    return await this.prisma.otps.updateMany({
+    return await this.prisma.otp_Tokens.updateMany({
       where: {
         OR: [
           email ? { email } : {},
           phone ? { phone } : {},
           deviceFingerprint ? { deviceFingerprint } : {},
         ].filter(condition => Object.keys(condition).length > 0),
-        status: 'PENDING',
+        status: OtpStatus.PENDING,
       },
       data: {
-        status: 'BLOCKED',
-        blockedAt: now,
+        status: OtpStatus.BLOCKED,
+        blocked_at: now,
         
       },
     });
@@ -93,23 +95,87 @@ export class OtpsQueries {
   ): Promise<boolean> {
     const blockThreshold = new Date(Date.now() - blockDurationMs);
     
-    const blockedOtp = await this.prisma.otps.findFirst({
+    const blockedOtp = await this.prisma.otp_Tokens.findFirst({
       where: {
         OR: [
           email ? { email } : {},
           phone ? { phone } : {},
           deviceFingerprint ? { deviceFingerprint } : {},
         ].filter(condition => Object.keys(condition).length > 0),
-        status: 'BLOCKED',
-        blockedAt: {
+        status: OtpStatus.BLOCKED,
+        blocked_at: {
           gte: blockThreshold,
         },
       },
       orderBy: {
-        blockedAt: 'desc',
+        blocked_at: 'desc',
       },
     });
 
     return !!blockedOtp;
+  }
+
+  async findOtpByEmailOrPhone(email?: string, phone?: string) {
+    return await this.prisma.otp_Tokens.findFirst({
+      where: {
+        OR: [
+          email ? { email } : {},
+          phone ? { phone } : {},
+        ].filter(condition => Object.keys(condition).length > 0),
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async markOtpAsExpired(otpId: number) {
+    return await this.prisma.otp_Tokens.update({
+      where: {
+        internal_id: otpId,
+      },
+      data: {
+        status: OtpStatus.EXPIRED,
+      },
+    });
+  }
+
+  async incrementOtpAttempts(otpId: number) {
+    return await this.prisma.otp_Tokens.update({
+      where: {
+        internal_id: otpId,
+      },
+      data: {
+        attempts: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  async markOtpAsVerified(otpId: number) {
+    const now = new Date();
+    return await this.prisma.otp_Tokens.update({
+      where: {
+        internal_id: otpId,
+      },
+      data: {
+        status: OtpStatus.VERIFIED,
+        verified_at: now,
+      },
+    });
+  }
+
+  async markOtpAsBlocked(otpId: number) {
+    const now = new Date();
+    return await this.prisma.otp_Tokens.update({
+      where: {
+        internal_id: otpId,
+      },
+      data: {
+        status: OtpStatus.BLOCKED,
+        blocked_at: now,
+      },
+    });
   }
 }
