@@ -18,10 +18,6 @@ export class ApplyTimeBlockService {
     phone?: string,
     deviceFingerprint?: string
   ): Promise<void> {
-
- 
-   
-    // Check rate limiting: count OTP requests in the last 30 minutes
     const recentRequestCount = await this.otpsQueries.countRecentOtpRequests(
       email,
       phone,
@@ -29,7 +25,6 @@ export class ApplyTimeBlockService {
       AUTH_NUMERIC_CONSTANTS.OTP_RATE_LIMIT_WINDOW_MS
     );
 
-    // If user has reached the limit, block them for 1 hour
     if (recentRequestCount >= AUTH_NUMERIC_CONSTANTS.OTP_RATE_LIMIT_MAX_ATTEMPTS) {
       await this.blockOtpRequests(email, phone, deviceFingerprint);
       throw new BadRequestException(AUTH_ERROR_MESSAGES.OTP_RATE_LIMIT_EXCEEDED);
@@ -44,10 +39,6 @@ export class ApplyTimeBlockService {
     const now = new Date();
     const blockedUntil = new Date(now.getTime() + AUTH_NUMERIC_CONSTANTS.OTP_RATE_LIMIT_BLOCK_DURATION_MS);
 
-    // Block OTP requests
-
-
-    // Block device if fingerprint is provided 
     if (deviceFingerprint) {
       const device = await this.deviceQueries.findDeviceByFingerprint(deviceFingerprint);
       if (device) {
@@ -55,17 +46,14 @@ export class ApplyTimeBlockService {
       }
     }
 
-    // Block user if email or phone is provided
-    if (email) {
-      const user = await this.usersQuery.findUserByEmail(email);
-      if (user) {
-        await this.usersQuery.blockUser(user.internal_id, now, blockedUntil);
-      }
-    } else if (phone) {
-      const user = await this.usersQuery.findUserByPhone(phone);
-      if (user) {
-        await this.usersQuery.blockUser(user.internal_id, now, blockedUntil);
-      }
+    const user = email 
+      ? await this.usersQuery.findUserByEmail(email)
+      : phone 
+      ? await this.usersQuery.findUserByPhone(phone)
+      : null;
+
+    if (user) {
+      await this.usersQuery.blockUser(user.internal_id, now, blockedUntil);
     }
   }
 }

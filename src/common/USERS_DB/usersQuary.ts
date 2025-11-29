@@ -9,7 +9,23 @@ export type CreateUserData = {
     name: string;
     phone: string;
     birthOfDate: string;
-    publicId: string;
+};
+
+export type AuditData = {
+    email: string;
+    phone?: string | null;
+    password: string;
+    is_absher: boolean;
+    birth_of_date: Date;
+    email_verified: boolean;
+    phone_verified: boolean;
+    name: string;
+    userid_fk: number;
+    change_at: Date;
+    action_type: string;
+    change_count: number;
+    period_end: string;
+    device_fingerprint?: string | null;
 };
 
 @Injectable()
@@ -23,10 +39,9 @@ export class UsersQuery {
                 password: data.password,
                 name: data.name,
                 phone: data.phone,
-                public_id: data.publicId,
                 birth_of_date: data.birthOfDate,
                 updatedAt: new Date(),
-            },
+            } as Prisma.usersCreateInput,
         });
     }
 
@@ -58,7 +73,7 @@ export class UsersQuery {
     async updatePasswordWithAudit(
         userId: number,
         hashedNewPassword: string,
-        auditData: Prisma.users_auditCreateInput
+        auditData: AuditData
     ) {
         return await this.prisma.$transaction(async (tx) => {
             // Update user password
@@ -67,7 +82,7 @@ export class UsersQuery {
                 data: { password: hashedNewPassword },
             });
 
-            // Create audit record with device fingerprint relation
+            // Create audit record
             await tx.users_audit.create({ data: auditData });
         });
     }

@@ -20,25 +20,24 @@ export class VerifyOtpService {
   async verifyOtp(verifyOtpDto: VerifyOtpDto) {
     const { email, phone, otpCode, deviceFingerprint } = verifyOtpDto;
 
-    // Step 1: Check if device and user are blocked (forever or time-based)
-    await this.checkBlocksService.validatedeviceanduserblock(
-      deviceFingerprint,
-      email,
-      phone
-    );
+    await this.checkBlocksService.validatedeviceanduserblock(deviceFingerprint, email, phone);
 
-    // Step 2: Find OTP by email or phone
     const otp = await this.otpsQueries.findOtpByEmailOrPhone(email, phone);
-
     if (!otp) {
       throw new BadRequestException(AUTH_ERROR_MESSAGES.OTP_NOT_FOUND);
     }
 
-    // Step 3: Check if OTP is pending and not expired
+    await this.validateOtpStatus(otp);
+    await this.validateOtpCode(otp, otpCode, email, phone, deviceFingerprint);
+    await this.otpsQueries.markOtpAsVerified(otp.internal_id);
+
+    return { message: AUTH_SUCCESS_MESSAGES.OTP_VERIFIED, verified: true };
+  }
+
+  private async validateOtpStatus(otp: any): Promise<void> {
     const now = new Date();
     
     if (otp.status === OtpStatus.PENDING && otp.expires_at < now) {
-      // Mark as expired in database
       await this.otpsQueries.markOtpAsExpired(otp.internal_id);
       throw new BadRequestException(AUTH_ERROR_MESSAGES.OTP_EXPIRED);
     }
@@ -54,43 +53,31 @@ export class VerifyOtpService {
     if (otp.status === OtpStatus.VERIFIED) {
       throw new BadRequestException(AUTH_ERROR_MESSAGES.OTP_NOT_FOUND);
     }
+  }
 
-    // Step 4: Check if attempts have reached the maximum (5 or more)
+  private async validateOtpCode(
+    otp: any,
+    otpCode: string,
+    email?: string,
+    phone?: string,
+    deviceFingerprint?: string
+  ): Promise<void> {
     if (otp.attempts >= AUTH_NUMERIC_CONSTANTS.OTP_MAX_VERIFICATION_ATTEMPTS) {
-      // Block OTP
       await this.otpsQueries.markOtpAsBlocked(otp.internal_id);
-      
-      // Block device and user
       await this.applyTimeBlockService.blockOtpRequests(email, phone, deviceFingerprint);
-      
       throw new BadRequestException(AUTH_ERROR_MESSAGES.OTP_MAX_ATTEMPTS_REACHED);
     }
 
-    // Step 5: Validate OTP code using constant-time comparison
     const otpBuffer = Buffer.from(otp.otp_code, 'utf8');
     const inputBuffer = Buffer.from(otpCode, 'utf8');
-    
-    // Ensure buffers are same length for timingSafeEqual
-    const isValidOtp = otpBuffer.length === inputBuffer.length && 
-                       timingSafeEqual(otpBuffer, inputBuffer);
+    const isValidOtp = otpBuffer.length === inputBuffer.length && timingSafeEqual(otpBuffer, inputBuffer);
     
     if (!isValidOtp) {
-      // Increment attempts
       await this.otpsQueries.incrementOtpAttempts(otp.internal_id);
-      
       const remainingAttempts = AUTH_NUMERIC_CONSTANTS.OTP_MAX_VERIFICATION_ATTEMPTS - (otp.attempts + 1);
-      
       throw new BadRequestException(
         `${AUTH_ERROR_MESSAGES.OTP_INCORRECT} ${remainingAttempts} attempts remaining.`
       );
     }
-
-    // Step 6: OTP is correct - mark as verified
-    await this.otpsQueries.markOtpAsVerified(otp.internal_id);
-
-    return {
-      message: AUTH_SUCCESS_MESSAGES.OTP_VERIFIED,
-      verified: true,
-    };
   }
 }

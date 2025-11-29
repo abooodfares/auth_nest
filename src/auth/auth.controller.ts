@@ -141,7 +141,7 @@ export class AuthController {
 
   @Post(AUTH_CONTROLLER_NAMES.FORGOT_PASSWORD_RESET)
   @HttpCode(HttpStatus.OK)
-  async verifyOtpForgetPassword(
+  async verifyOtpForgotPassword(
     @Body() forgotPasswordResetDto: ForgotPasswordResetDto,
   ): Promise<ApiResponse> {
     const data = await this.authService.verifyOtpForgetPassword(forgotPasswordResetDto);

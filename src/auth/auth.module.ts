@@ -16,6 +16,11 @@ import { ApplyTimeBlockService } from './services/otps/blocks/applyTimeBlock';
 import { VerifyOtpService } from './services/otps/verify_otp';
 import { DeviceQueries } from './services/device/deviceQueries';
 import { AuthGuard } from './services/jwt/guards/jwtGuard';
+import { ResetPasswordHelper } from './services/reset_password/helper';
+import { ForgotPasswordSendOtpService } from './services/forgot_password/send_otp';
+import { ForgotPasswordVerifyAndResetService } from './services/forgot_password/verify_and_reset';
+import { VerifyOtpRegisterService } from './services/register/verify_otp_register';
+import { VerifyOtpLoginService } from './services/login/verify_otp_login';
 
 
 @Module({
@@ -40,6 +45,11 @@ import { AuthGuard } from './services/jwt/guards/jwtGuard';
     VerifyOtpService,
     DeviceQueries,
     AuthGuard,
+    ResetPasswordHelper,
+    ForgotPasswordSendOtpService,
+    ForgotPasswordVerifyAndResetService,
+    VerifyOtpRegisterService,
+    VerifyOtpLoginService,
   ],
 })
 export class AuthModule {}
