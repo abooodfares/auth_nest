@@ -4,3 +4,4 @@ export const AUTH_ACTION_TYPES = {
   REGISTER: 'REGISTER',
   LOGIN: 'LOGIN',
 } as const;
+
