@@ -25,14 +25,6 @@ model Otp_Tokens {
   @@index([phone], type: Hash)
 }
 
-model Permissions {
-  internal_id          Int                    @id @default(autoincrement())
-  key                  PermissionKey          @unique
-  name                 String                 @db.VarChar(80)
-  description          String?                @db.VarChar(255)
-  Role_and_Permissions Role_and_Permissions[]
-}
-
 model RefreshTokens {
   internal_id        Int         @id @default(autoincrement())
   device_fingerprint String
@@ -49,38 +41,6 @@ model RefreshTokens {
   @@index([userId])
 }
 
-model Role_and_Permissions {
-  internal_id     Int         @id @default(autoincrement())
-  roleid_fk       Int
-  permissionid_fk Int
-  Permissions     Permissions @relation(fields: [permissionid_fk], references: [internal_id], onDelete: Cascade)
-  Roles           Roles       @relation(fields: [roleid_fk], references: [internal_id], onDelete: Cascade)
-
-  @@unique([roleid_fk, permissionid_fk])
-}
-
-model Roles {
-  internal_id          Int                    @id @default(autoincrement())
-  rolekey              RoleKey                @unique
-  Role_and_Permissions Role_and_Permissions[]
-  User_and_Roles       User_and_Roles[]
-  User_and_Roles_audit User_and_Roles_audit[]
-}
-
-model UserInvites {
-  internal_id      String       @id @db.Uuid
-  family_id        Int
-  admin_id         Int
-  email            String?      @db.VarChar(50)
-  phone            String?      @db.VarChar(20)
-  accept_invite    Boolean?
-  is_family_member Boolean      @default(false)
-  createdAt        DateTime     @default(now()) @db.Timestamp(6)
-  updatedAt        DateTime     @db.Timestamp(6)
-  users            users        @relation(fields: [admin_id], references: [internal_id], onDelete: Cascade)
-  family_trees     family_trees @relation(fields: [family_id], references: [internal_id], onDelete: Cascade)
-}
-
 model User_Device_UserId {
   internal_id Int         @id @default(autoincrement())
   deviceid_fk String
@@ -89,28 +49,6 @@ model User_Device_UserId {
   users       users       @relation(fields: [userid_fk], references: [internal_id], onDelete: Cascade)
 
   @@unique([deviceid_fk, userid_fk])
-}
-
-model User_and_Roles {
-  internal_id Int   @id @default(autoincrement())
-  roleid_fk   Int
-  userid_fk   Int
-  Roles       Roles @relation(fields: [roleid_fk], references: [internal_id], onDelete: Cascade)
-  users       users @relation(fields: [userid_fk], references: [internal_id], onDelete: Cascade)
-
-  @@unique([userid_fk, roleid_fk])
-}
-
-model User_and_Roles_audit {
-  internal_id                                        Int      @id @default(autoincrement())
-  useradmin_id                                       Int?
-  userid_change_fk                                   Int
-  roleid_fk                                          Int
-  change_at                                          DateTime @db.Timestamp(6)
-  action_type                                        String   @db.VarChar(50)
-  Roles                                              Roles    @relation(fields: [roleid_fk], references: [internal_id], onDelete: Cascade)
-  users_User_and_Roles_audit_useradmin_idTousers     users?   @relation("User_and_Roles_audit_useradmin_idTousers", fields: [useradmin_id], references: [internal_id])
-  users_User_and_Roles_audit_userid_change_fkTousers users    @relation("User_and_Roles_audit_userid_change_fkTousers", fields: [userid_change_fk], references: [internal_id], onDelete: Cascade)
 }
 
 model User_device {
@@ -128,80 +66,31 @@ model User_device {
   users_audit        users_audit[]
 }
 
-model family_tree_access {
-  internal_id    Int          @id @default(autoincrement())
-  user_id        Int
-  family_tree_id Int
-  created_at     DateTime     @default(now()) @db.Timestamp(6)
-  updated_at     DateTime     @db.Timestamp(6)
-  family_trees   family_trees @relation(fields: [family_tree_id], references: [internal_id], onDelete: Cascade)
-  users          users        @relation(fields: [user_id], references: [internal_id], onDelete: Cascade)
-
-  @@unique([user_id, family_tree_id])
-  @@index([family_tree_id])
-}
-
-model family_tree_admins {
-  internal_id    Int          @id @default(autoincrement())
-  user_id        Int
-  family_tree_id Int
-  created_at     DateTime     @default(now())
-  updated_at     DateTime
-  family_trees   family_trees @relation(fields: [family_tree_id], references: [internal_id], onDelete: Cascade)
-  users          users        @relation(fields: [user_id], references: [internal_id], onDelete: Cascade)
-
-  @@unique([user_id, family_tree_id])
-  @@index([family_tree_id])
-  @@index([user_id])
-}
-
-model family_trees {
-  internal_id        Int                  @id @default(autoincrement())
-  public_id          String               @unique @default(uuid())
-  name               String               @db.VarChar(100)
-  description        String?
-  created_at         DateTime             @default(now()) @db.Timestamp(6)
-  updated_at         DateTime             @db.Timestamp(6)
-  UserInvites        UserInvites[]
-  family_tree_access family_tree_access[]
-  family_tree_admins family_tree_admins[]
-  users              users[]
-}
-
 model users {
-  internal_id                                                       Int                    @id @default(autoincrement())
-  nationalId                                                        String?                @unique @db.VarChar(255)
-  public_id                                                         String                 @unique @default(uuid())
-  family_id                                                         Int?
-  phone                                                             String?                @unique @db.VarChar(20)
-  email                                                             String                 @unique @db.VarChar(50)
-  password                                                          String                 @db.VarChar(255)
-  birth_of_date                                                     String                 @db.VarChar(10)
-  email_verified                                                    Boolean                @default(false)
-  phone_verified                                                    Boolean                @default(false)
-  name                                                              String                 @db.VarChar(50)
-  email_verified_at                                                 DateTime?              @db.Timestamp(6)
-  phone_verified_at                                                 DateTime?              @db.Timestamp(6)
-  isblocked                                                         Boolean                @default(false)
-  blocked_at                                                        DateTime?              @db.Timestamp(6)
-  blocked_until                                                     DateTime?              @db.Timestamp(6)
-  block_count                                                       Int                    @default(0)
-  Forever_block                                                     Boolean                @default(false)
-  createdAt                                                         DateTime               @default(now()) @db.Timestamp(6)
-  updatedAt                                                         DateTime               @db.Timestamp(6)
-  RefreshTokens                                                     RefreshTokens[]
-  UserInvites                                                       UserInvites[]
-  User_Device_UserId                                                User_Device_UserId[]
-  User_and_Roles                                                    User_and_Roles[]
-  User_and_Roles_audit_User_and_Roles_audit_useradmin_idTousers     User_and_Roles_audit[] @relation("User_and_Roles_audit_useradmin_idTousers")
-  User_and_Roles_audit_User_and_Roles_audit_userid_change_fkTousers User_and_Roles_audit[] @relation("User_and_Roles_audit_userid_change_fkTousers")
-  family_tree_access                                                family_tree_access[]
-  family_tree_admins                                                family_tree_admins[]
-  family_trees                                                      family_trees?          @relation(fields: [family_id], references: [internal_id])
-  users_audit                                                       users_audit[]
+  internal_id        Int                  @id @default(autoincrement())
+  nationalId         String?              @unique @db.VarChar(255)
+  public_id          String               @unique @default(uuid())
+  phone              String?              @unique @db.VarChar(20)
+  email              String               @unique @db.VarChar(50)
+  password           String               @db.VarChar(255)
+  birth_of_date      String               @db.VarChar(10)
+  email_verified     Boolean              @default(false)
+  phone_verified     Boolean              @default(false)
+  name               String               @db.VarChar(50)
+  email_verified_at  DateTime?            @db.Timestamp(6)
+  phone_verified_at  DateTime?            @db.Timestamp(6)
+  isblocked          Boolean              @default(false)
+  blocked_at         DateTime?            @db.Timestamp(6)
+  blocked_until      DateTime?            @db.Timestamp(6)
+  block_count        Int                  @default(0)
+  Forever_block      Boolean              @default(false)
+  createdAt          DateTime             @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime             @db.Timestamp(6)
+  RefreshTokens      RefreshTokens[]
+  User_Device_UserId User_Device_UserId[]
+  users_audit        users_audit[]
 
   @@index([email], type: Hash)
-  @@index([family_id])
   @@index([phone], type: Hash)
 }
 
@@ -236,20 +125,4 @@ enum OtpStatus {
   EXPIRED
 }
 
-enum PermissionKey {
-  MANAGE_ROLES
-  EDIT_NODE
-  EDIT_RELATIONS
-  SEND_INVITE
-  VIEW_FAMILY_MEMBERS
-  GET_ALL_USERS_PG
-  GET_ALL_USERS_NEO4J
-  SEARCH_PG
-  SEARCH_NEO4J
-}
 
-enum RoleKey {
-  ADMIN
-  FAMILY_ADMIN
-  USER
-}
