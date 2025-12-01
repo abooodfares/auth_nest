@@ -4,3 +4,4 @@ export enum OtpStatus {
   BLOCKED = 'BLOCKED',
   EXPIRED = 'EXPIRED',
 }
+
